@@ -16,7 +16,18 @@ import filecmp
 openresty_pkg_url = 'https://openresty.org/download/openresty-1.19.3.1.tar.gz'
 openresty_pkg = 'openresty-1.19.3.1.tar.gz'
 
+ngx_brotli_pkg_url = 'https://github.com/google/ngx_brotli.git'
+ngx_brotli_pkg = 'ngx_brotli.git'
+
 work_path = os.getcwd()
+
+def install_ngx_brotli():
+    print('### git clone ngx_brotli package...')
+    os.chdir('/opt')
+    exec_sys_cmd('rm -rf ' + ngx_brotli_pkg.replace('.git',''))
+    exec_sys_cmd( 'git clone ' + ngx_brotli_pkg_url )
+    exec_sys_cmd( 'cd ngx_brotli && git submodule update --init' )
+
 
 def install_openresty( ):
     #check if the old version of VeryNginx installed( use upcase directory )
@@ -47,10 +58,13 @@ def install_openresty( ):
     print('### release the package ...')
     exec_sys_cmd( 'tar -xzf ' + openresty_pkg )
 
+    if os.path.exists('/opt/ngx_brotli') == False:
+        install_ngx_brotli()
+
     #configure && compile && install openresty
     print('### configure openresty ...')
     os.chdir( openresty_pkg.replace('.tar.gz','') )
-    exec_sys_cmd( './configure --prefix=/opt/verynginx/openresty --user=nginx --group=nginx --with-http_v2_module --with-http_sub_module --with-http_stub_status_module --with-luajit --with-http_gzip_static_module --with-http_realip_module --with-http_flv_module --with-http_mp4_module --with-http_geoip_module --with-stream --with-stream_ssl_module' )
+    exec_sys_cmd( './configure --prefix=/opt/verynginx/openresty --user=nginx --group=nginx --with-http_v2_module --with-http_sub_module --with-http_stub_status_module --with-luajit --with-http_gzip_static_module --with-http_realip_module --with-http_flv_module --with-http_mp4_module  --with-stream --with-stream_ssl_module --add-module=/opt/ngx_brotli' )
     
     print('### compile openresty ...')
     exec_sys_cmd( 'make' )
@@ -140,6 +154,7 @@ if __name__ == '__main__':
     if cmd == 'install':
         cmd = safe_pop(args)
         if cmd == 'all' or cmd == None:
+            install_ngx_brotli()
             install_openresty()
             install_verynginx()
         elif cmd == 'openresty':
